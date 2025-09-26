@@ -20,11 +20,12 @@
           <input type="email" id="email" placeholder="Email address" required>
           <input type="password" id="password" placeholder="Password" required>
           <a class="fpass" href="#">Forgot Password?</a>
-          <input type="button" value = "Submit">
+          <input type="button" value ="Submit" id="btnSignin">
           <p class="signup">Don't have an account? <a href="#">Sign up</a></p>
           <p class="error-msg" id="errorMsg"></p>
         </form>
     </div>
-  <script src="{% static 'rr_app/js/login.js' %}"></script>
+    <script src="{% static 'rr_app/js/DataManager.js' %}"></script>
+    <script src="{% static 'rr_app/js/login.js' %}"></script>
 </body>
 </html>
