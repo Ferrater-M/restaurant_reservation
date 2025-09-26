@@ -1,3 +1,8 @@
+document.addEventListener('DOMContentLoaded', () => {
+    window.DataManager = new DataManager(); 
+    window.Login = new Login();            
+});
+
 class Login {
     constructor() {
         this.submit = document.getElementById('btnSignin');
@@ -10,6 +15,7 @@ class Login {
     
     init() {
         this.initBtnSubmitListener();
+        this.initInputFields();
     }
 
     initBtnSubmitListener(){
@@ -33,24 +39,36 @@ class Login {
             // this argument gets called in the if statement inside our find function
             // if the lambda returns true, the find function returns an element
             if(!user){
-                this.showLoginError("Email not found");
+                this.showError("Email not found");
                 return;
             }
             if(user.password != password){
-                this.showLoginError("Password is incorrect");
+                this.showError("Password is incorrect");
                 return;
             }
-            this.removeLoginError();
+            this.removeError();
           }).catch(err => {
             console.error(err);
-            this.showLoginError("Error fetching user data");
+            this.showError("Error fetching user data");
           });
       });
     }
-    showLoginError(message){
+
+    initInputFields(){
+        this.email.addEventListener('input', ()=>{
+          if(this.error_msg.textContent === "Email not found")
+          this.removeError();
+        })
+        this.password.addEventListener('input', ()=>{
+          if(this.error_msg.textContent === "Password is incorrect")
+          this.removeError();
+        })
+    }
+
+    showError(message){
       this.error_msg.textContent = message;
     }
-    removeLoginError(){
+    removeError(){
       this.error_msg.textContent = '';
     }
 }

@@ -15,7 +15,7 @@ class DataManager {
                 // includes Django's CSRF token so the POST request is allowed
                 // this.getCSRFToken(): a function that grabs the CSRF token from cookies (the method after this)
             },
-            body: JSON.stringify(data) // converts our object (pqData) into a string that the server can understand
+            body: JSON.stringify(data) // converts our object (data) into a string that the server can understand
 
         })
         // .then() is a method that runs the function passed as the parameter once the server repleis
@@ -62,8 +62,3 @@ class DataManager {
         });
     }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    window.DataManager = new DataManager(); // create first
-    window.Login = new Login();             // create second
-});
