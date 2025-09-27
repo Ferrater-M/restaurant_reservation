@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-from decouple import config
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -34,9 +33,17 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # For Gmail
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER') 
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')  
-DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER') 
+EMAIL_HOST_USER = "reservationr59@gmail.com"
+EMAIL_HOST_PASSWORD = "zllasqfkfxnexvga"
+DEFAULT_FROM_EMAIL = "reservationr59@gmail.com"
+
+# Use your custom User model
+AUTH_USER_MODEL = 'rr_app.User'
+
+# Login/logout URLs
+LOGIN_URL = '/rr/login/'
+LOGIN_REDIRECT_URL = '/rr/dashboard/'
+LOGOUT_REDIRECT_URL = '/rr/login/'
 
 
 # Application definition

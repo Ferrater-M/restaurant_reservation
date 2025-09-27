@@ -22,7 +22,6 @@ class Login {
     }
 
     async initBtnSubmitListener() {
-        console.log("click");
         this.submit.addEventListener('click', async () => {
             const email = this.email.value.trim();
             const password = this.password.value.trim();
@@ -33,6 +32,11 @@ class Login {
                 this.dataManager.postRequest('/rr/login_user/', em_pass).then(response => {
                     if (response.success) {
                         alert(response.message);
+                        if (response.user.is_admin) {
+                            window.location.href = "/rr/admin-dashboard/";
+                        } else {
+                            window.location.href = "/rr/dashboard/";
+                        }
                     } else {
                         this.ErrorMessage.show(response.error || "Error login");
                     }

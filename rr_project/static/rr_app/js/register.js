@@ -22,17 +22,20 @@ class Register {
         this.initInputFields();
     }
 
-    async initBtnSubmitListener() {
+     async initBtnSubmitListener() {
         this.submit.addEventListener('click', () => {
             this.user.first_name = this.first_name.value.trim();
             this.user.last_name = this.last_name.value.trim();
             const password = this.password.value.trim();
             const c_password = this.c_password.value.trim();
             const email = this.email.value.trim();
+            const role = 'user';
 
             this.user.email = email;
             this.user.password = password;
             this.user.c_password = c_password;
+            this.user.role = role;
+            
             this.dataManager.postRequest('/rr/register_user/', this.user).then(
                 response => {
                     if (response.success) {

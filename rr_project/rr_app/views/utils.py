@@ -4,6 +4,7 @@ from django.urls import reverse
 import re, random
 from ..models import VerificationCode
 
+
 def send_verification_email(pending_user, request):
     verification_url = request.build_absolute_uri(
         reverse('verify_email', kwargs={'token': str(pending_user.token)})
@@ -15,6 +16,8 @@ def send_verification_email(pending_user, request):
 
     Please click the link below to verify your email:
     {verification_url}
+    
+    Your account role will be: {pending_user.get_role_display()}
     '''
     
     send_mail(
@@ -25,11 +28,13 @@ def send_verification_email(pending_user, request):
         fail_silently=False,
     )
 
+
 def send_verification_code_email(user):
     verification_code = f"{random.randint(0, 999999):06d}"
     VerificationCode.objects.create(
         user=user,
-        code=verification_code)
+        code=verification_code
+    )
 
     subject = "Your Verification Code"
     message = f"""
@@ -50,8 +55,8 @@ def send_verification_code_email(user):
         fail_silently=False,
     )
 
-    # Return the code so you can save it in the database or session for verification
     return verification_code
+
 
 def validate_password(password):
     min_length = 8

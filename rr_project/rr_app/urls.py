@@ -9,5 +9,8 @@ urlpatterns = [
     path('login_user/', auth.loginUser, name ='login_user'),
     path('fpass_request/', auth.fpassRequest, name ='fpass_request'),
     path('verify-email/<uuid:token>/', auth.verify_email, name='verify_email'),
-    # path('request-password-reset/', auth.request_password_reset, name='request_password_reset'),
+    path('dashboard/', auth.dashboard, name='dashboard'),
+    path('admin-dashboard/', auth.admin_only_view, name='admin_dashboard'),
+    path('current-user/', auth.get_current_user, name='current_user'),
+    path('logout/', auth.logoutUser, name='logout'),
 ]
