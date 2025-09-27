@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    window.DataManager = new DataManager(); 
     window.Login = new Login();            
 });
 

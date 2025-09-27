@@ -1,5 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
-    window.DataManager = new DataManager();     
+document.addEventListener('DOMContentLoaded', () => {   
     window.Register = new Register();
 });
 

@@ -1,17 +1,19 @@
+/* Reset & Base */
 body, html {
   margin: 0;
   padding: 0;
-  min-height: 100vh; /* Changed from height: 100% */
-  font-family: 'Roboto';
+  min-height: 100vh;
+  font-family: 'Roboto', sans-serif;
   display: flex;
   flex-direction: column;     
   justify-content: center;    
   align-items: center;       
   background: url('../images/login_register_bg.png') no-repeat center center;
   background-size: cover;
-  background-attachment: fixed; /* Keeps background fixed during scroll */
+  background-attachment: fixed;
 }
 
+/* Logo Section */
 .logo {
   display: flex;
   flex-direction: column; 
@@ -29,7 +31,7 @@ body, html {
 .logo p {
   margin: 0;           
   line-height: 1.2;
-  color: rgb(255, 255, 255);
+  color: #fff;
   font-weight: bold;
 }
 
@@ -45,27 +47,25 @@ body, html {
   letter-spacing: 4px;
 }
 
-/* Container */
+/* Form Container */
 .container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 380px;
-  min-height: 400px; /* increased height */
-  background: rgb(255, 255, 255);
+  width: 420px;
+  min-height: 500px;
+  background: #fff;
   border-radius: 25px;
-  margin-top: 40px; /* push below logo */
+  margin-top: 40px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  padding: 20px 25px;
+  padding: 30px 35px;
+  box-sizing: border-box;
 }
 
-.container form {
-  margin-left: 10px;
-  margin-right: 10px;
-}
-
-.container .signin {
+/* Page Titles - for both signin and signup */
+.container .signin,
+.container .signup {
   font-size: 40px;
   font-weight: bold;
   color: #2B2828;
@@ -74,12 +74,19 @@ body, html {
   margin-top: 0;
 }
 
-/* Form inputs */
+/* Form Styling */
+.container form {
+  width: 100%;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.container form input[type="text"],
 .container form input[type="email"],
 .container form input[type="password"] {
   width: 100%;
-  padding: 15px 15px 15px 15px;
-  margin: 8px 0;
+  padding: 14px 15px;
+  margin: 10px 0;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 16px;
@@ -87,9 +94,16 @@ body, html {
   box-sizing: border-box;
   font-weight: bold;
   color: #2B2828;
+  transition: border-color 0.2s ease;
 }
 
-/* Submit button */
+.container form input[type="text"]:focus,
+.container form input[type="email"]:focus,
+.container form input[type="password"]:focus {
+  border-color: #C4541F;
+}
+
+/* Submit Button */
 .container form input[type="button"] {
   width: 100%;
   padding: 12px;
@@ -108,7 +122,7 @@ body, html {
   background-color: #a63c10;
 }
 
-/* Links */
+/* Links - Forgot Password (for login page) */
 .container form .fpass {
   display: block;
   text-align: right;
@@ -123,6 +137,7 @@ body, html {
   text-decoration: underline;
 }
 
+/* Links - Sign up (for login page) */
 .container form .signup {
   font-size: 14px;
   color: #2B2828;
@@ -141,8 +156,29 @@ body, html {
   text-decoration: underline;
 }
 
+/* Links - Sign in (for registration page) */
+.container form .signin {
+  font-size: 14px;
+  color: #2B2828;
+  text-align: center;
+  margin-top: 20px;
+  letter-spacing: 1px;
+}
+
+.container form .signin a {
+  color: #C4541F;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.container form .signin a:hover {
+  text-decoration: underline;
+}
+
+/* Error Message */
 .error-msg {
   color: red;
   font-size: 14px;
   margin-top: 10px;
+  text-align: center;
 }
