@@ -2,18 +2,20 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from ..models import User
-from .utils import send_verification_email, validate_password
-from ..models import User, PendingUser
+from .utils import send_verification_email, validate_password, send_verification_code_email
+from ..models import User, PendingUser, VerificationCode
 from django.contrib.auth.hashers import make_password, check_password
 import json
 
 
-def login(request):
+def loginRender(request):
     return render(request, 'rr_app/login.html')
 
-def register(request):
+def registerRender(request):
     return render(request, 'rr_app/register.html')
+
+def forgot_passRender(request):
+    return render(request, 'rr_app/fpass.html')
 
 @csrf_exempt 
 @require_http_methods(["POST"])
@@ -53,7 +55,7 @@ def registerUser(request):
         print("2") 
         return JsonResponse({
             "success": True,
-            "message": "Please verify your email before logging in."
+            "message": "Register successful! Please check your inbox to verify your account."
         })
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=400)
@@ -88,7 +90,7 @@ def loginUser(request):
         user = User.objects.filter(email=email).first()
         if user:
             if check_password(password, user.password):
-                return JsonResponse({"success": True, "message": "Login successfull"})
+                return JsonResponse({"success": True, "message": "Login is successfull"})
             else:
                 return JsonResponse({"success": False, "error": "Email or password is incorrect"}, status=400)
         else:
@@ -98,3 +100,54 @@ def loginUser(request):
             return JsonResponse({"success": False, "error": "Email or password is incorrect"}, status=400)
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+@csrf_exempt 
+@require_http_methods(["POST"])
+def fpassRequest(request):
+    try:
+        data = json.loads(request.body)
+        req = data.get("request")
+        email = data.get("email")
+        user = User.objects.filter(email=email).first()
+        if req == "email_verif":
+            if not email:
+                return JsonResponse({"success": False, "error": "Please input email"}, status=400)
+            if not user:
+                return JsonResponse({"success": False, "error": "Email does not exist"}, status=400)
+            send_verification_code_email(user)
+            return JsonResponse({"success": True, "message": "Verification Code Sent"})
+        if req == "code_verif":
+            code = data.get("code")
+            if not code:
+                return JsonResponse({"success": False, "error": "Please input the code"}, status=400)
+            code_obj = VerificationCode.objects.filter(
+                user=user,
+                code=code,
+            ).first()   
+            if not code_obj:
+                return JsonResponse({"success": False, "error": "Verification code is incorrect or expired"}, status=400)
+            
+            if code_obj.is_expired():
+                return JsonResponse({"success": False, "error": "Verification code has expired"}, status=400)
+            code_obj.delete()
+            return JsonResponse({"success": True, "message": "Verification is successful"})
+        if req == "password_verif":
+            password = data.get("password")
+            c_password = data.get("c_password")
+            if not password or not c_password:
+                return JsonResponse({"success": False, "error": "Please input all fields"}, status=400)
+            valid, message = validate_password(password)
+            if(not valid):
+               return JsonResponse({"success": False, "error": message}, status=400)
+            if password != c_password:
+                return JsonResponse({"success": False, "error": "Passwords do not match"}, status=400)
+            hashed_password = make_password(password)
+            user.password = hashed_password
+            user.save()
+            return JsonResponse({"success": True, "message": "Password has changed"})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+def confirmPass(request):
+    return JsonResponse
+    
