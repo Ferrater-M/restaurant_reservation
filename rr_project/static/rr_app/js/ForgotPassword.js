@@ -65,6 +65,7 @@ class ForgotPassword{
                 this.DataManager.postRequest('/rr/fpass_request/', request).then(response =>{
                     if(response.success){
                         alert(response.message)
+                        window.location.href = "/rr/login/";
                     }else{
                         this.ErrorMessage.show(response.error || "Error Password Verification");
                     }
