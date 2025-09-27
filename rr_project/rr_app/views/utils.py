@@ -1,6 +1,7 @@
 from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
+import re
 
 def send_verification_email(pending_user, request):
     verification_url = request.build_absolute_uri(
@@ -45,3 +46,16 @@ def send_password_reset_email(user, request, reset_token):
         [user.email],
         fail_silently=False,
     )
+
+def validate_password(password):
+    min_length = 8
+    max_length = 20
+    if not password:
+        return False, "Password cannot be empty"
+    if len(password) < min_length:
+        return False, f"Password must be at least {min_length} characters"
+    if len(password) > max_length:
+        return False, f"Password cannot exceed {max_length} characters"
+    if not re.search(r"[0-9]", password):
+        return False, "Password must contain at least one number"
+    return True, "Password is valid"

@@ -7,7 +7,7 @@
 <form id="loginForm">
   <input type="email" id="email" placeholder="Email address" required>
   <input type="password" id="password" placeholder="Password" required>
-  <a class="fpass" href="#">Forgot Password?</a>
+  <a class="fpass" id="forgotPassword" href="#">Forgot Password?</a>
   <input type="button" value="Submit" id="btnSignin">
   <p class="signup">Don't have an account? <a href="{% url 'register' %}">Sign up</a></p>
   <p class="error-msg" id="errorMsg"></p>

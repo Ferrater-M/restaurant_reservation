@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from ..models import User
-from ..utils import send_verification_email
+from .utils import send_verification_email, validate_password
 from ..models import User, PendingUser
 from django.contrib.auth.hashers import make_password, check_password
 import json
@@ -32,6 +32,10 @@ def registerUser(request):
         if User.objects.filter(email=email).exists() or PendingUser.objects.filter(email=email).exists():
             return JsonResponse({"success": False, "error": "Email already exists"}, status=400)
 
+        valid, message = validate_password(password)
+        if(not valid):
+            return JsonResponse({"success": False, "error": message}, status=400)
+        
         if(password != c_password):
             return JsonResponse({"success": False, "error": "Passwords do not match"}, status=400)
 
@@ -86,11 +90,11 @@ def loginUser(request):
             if check_password(password, user.password):
                 return JsonResponse({"success": True, "message": "Login successfull"})
             else:
-                return JsonResponse({"success": False, "error": "Password is incorrect"}, status=400)
+                return JsonResponse({"success": False, "error": "Email or password is incorrect"}, status=400)
         else:
             pending_user = PendingUser.objects.filter(email=email).first()
             if pending_user and check_password(password, pending_user.password):
                 return JsonResponse({"success": False, "error": "Account is pending verification"}, status=400)
-            return JsonResponse({"success": False, "error": "Email is not registerd"}, status=400)
+            return JsonResponse({"success": False, "error": "Email or password is incorrect"}, status=400)
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=400)
