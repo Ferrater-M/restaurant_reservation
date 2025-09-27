@@ -23,16 +23,14 @@ class Register {
         this.submit.addEventListener('click', ()=>{
             this.user.first_name = this.first_name.value.trim();
             this.user.last_name = this.last_name.value.trim();
-
+            const password = this.password.value.trim();
+            const c_password = this.c_password.value.trim();
+            const email = this.email.value.trim();
             this.dataManager.getRequest('/rr/getUsers/').then(users => {
-                const email = this.email.value.trim();
-                const user = users.find(u => u.email == email);
-                if(user){
-                    this.errorMessage.show("Email already exists");
+                if(!this.user.first_name || !this.user.last_name || !email || !password || !c_password){
+                    this.errorMessage.show("Please input all fields");
                     return;
                 }
-                const password = this.password.value.trim();
-                const c_password = this.c_password.value.trim();
                 if(c_password != password){
                     this.errorMessage.show("Passwords do not match");
                     return;
@@ -42,6 +40,7 @@ class Register {
                 this.dataManager.postRequest('/rr/addUser/', this.user).then(
                     response =>{
                         if(response.success){
+                            alert("Register successful! Please check your inbox to verify your account.")
                             window.location.href = "/rr/login/";
                         }else{
                             this.errorMessage.show(response.error || 'Error creating user');
