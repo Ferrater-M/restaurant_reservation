@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    window.DataManager = new DataManager(); 
     window.Login = new Login();            
 });
 
@@ -10,6 +9,8 @@ class Login {
         this.password = document.getElementById('password');
         this.error_msg = document.getElementById('errorMsg')
         this.dataManager = window.DataManager;
+        this.errorMessage = window.ErrorMessage;
+        this.errorMessage.setElement(this.error_msg);
         this.init();
     }
     
@@ -39,17 +40,17 @@ class Login {
             // this argument gets called in the if statement inside our find function
             // if the lambda returns true, the find function returns an element
             if(!user){
-                this.showError("Email not found");
+                this.errorMessage.show("Email not found");
                 return;
             }
             if(user.password != password){
-                this.showError("Password is incorrect");
+                this.errorMessage.show("Password is incorrect");
                 return;
             }
-            this.removeError();
+            this.errorMessage.remove();
           }).catch(err => {
             console.error(err);
-            this.showError("Error fetching user data");
+            this.errorMessage.show("Error fetching user data");
           });
       });
     }
@@ -57,18 +58,11 @@ class Login {
     initInputFields(){
         this.email.addEventListener('input', ()=>{
           if(this.error_msg.textContent === "Email not found")
-          this.removeError();
+          this.errorMessage.remove();
         })
         this.password.addEventListener('input', ()=>{
           if(this.error_msg.textContent === "Password is incorrect")
-          this.removeError();
+          this.errorMessage.remove();
         })
-    }
-
-    showError(message){
-      this.error_msg.textContent = message;
-    }
-    removeError(){
-      this.error_msg.textContent = '';
     }
 }

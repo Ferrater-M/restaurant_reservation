@@ -1,5 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
-    window.DataManager = new DataManager();     
+document.addEventListener('DOMContentLoaded', () => {   
     window.Register = new Register();
 });
 
@@ -14,6 +13,8 @@ class Register {
         this.user = {}
         this.dataManager = window.DataManager;
         this.error_msg = document.getElementById('errorMsg');
+        this.errorMessage = window.ErrorMessage;
+        this.errorMessage.setElement(this.error_msg);
         this.init();
     }
 
@@ -31,13 +32,13 @@ class Register {
                 const email = this.email.value.trim();
                 const user = users.find(u => u.email == email);
                 if(user){
-                    this.showError("Email already exists");
+                    this.errorMessage.show("Email already exists");
                     return;
                 }
                 const password = this.password.value.trim();
                 const c_password = this.c_password.value.trim();
                 if(c_password != password){
-                    this.showError("Passwords do not match");
+                    this.errorMessage.show("Passwords do not match");
                     return;
                 }
                 this.user.email = email;
@@ -47,13 +48,13 @@ class Register {
                         if(response.success){
                             window.location.href = "/rr/login/";
                         }else{
-                            this.showError(response.error || 'Error creating user');
+                            this.errorMessage.show(response.error || 'Error creating user');
                         }
                     }
                 );
             }).catch(err => {
             console.error(err);
-            this.showError("Error creating user");
+            this.errorMessage.show("Error creating user");
           });
         })
     }
@@ -61,23 +62,16 @@ class Register {
     initInputFields(){
         this.email.addEventListener('input', ()=>{
             if(this.error_msg.textContent == "Email already exists")
-            this.removeError();
+            this.errorMessage.remove();
         })
         
         this.password.addEventListener('input', ()=>{
             if(this.error_msg.textContent == "Passwords do not match")
-            this.removeError();
+            this.errorMessage.remove();
         })
         this.c_password.addEventListener('input', ()=>{
             if(this.error_msg.textContent == "Passwords do not match")
-            this.removeError();
+            this.errorMessage.remove();
         })
-    }
-
-    showError(message){
-      this.error_msg.textContent = message;
-    }
-    removeError(){
-      this.error_msg.textContent = '';
     }
 }
