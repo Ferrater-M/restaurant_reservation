@@ -1,5 +1,5 @@
 class Register {
-    constructor(){
+    constructor() {
         this.submit = document.getElementById('btnSignup');
         this.first_name = document.getElementById('firstName');
         this.last_name = document.getElementById('lastName');
@@ -14,59 +14,48 @@ class Register {
         this.init();
     }
 
-    init(){
+    init() {
         this.initBtnSubmitListener();
         this.initInputFields();
     }
 
-    initBtnSubmitListener(){
-        this.submit.addEventListener('click', ()=>{
+    async initBtnSubmitListener() {
+        this.submit.addEventListener('click', () => {
             this.user.first_name = this.first_name.value.trim();
             this.user.last_name = this.last_name.value.trim();
             const password = this.password.value.trim();
             const c_password = this.c_password.value.trim();
             const email = this.email.value.trim();
-            this.dataManager.getRequest('/rr/getUsers/').then(users => {
-                if(!this.user.first_name || !this.user.last_name || !email || !password || !c_password){
-                    this.errorMessage.show("Please input all fields");
-                    return;
-                }
-                if(c_password != password){
-                    this.errorMessage.show("Passwords do not match");
-                    return;
-                }
-                this.user.email = email;
-                this.user.password = password;
-                this.dataManager.postRequest('/rr/addUser/', this.user).then(
-                    response =>{
-                        if(response.success){
-                            alert("Register successful! Please check your inbox to verify your account.")
-                            window.location.href = "/rr/login/";
-                        }else{
-                            this.errorMessage.show(response.error || 'Error creating user');
-                        }
+
+            this.user.email = email;
+            this.user.password = password;
+            this.user.c_password = c_password;
+            this.dataManager.postRequest('/rr/register_user/', this.user).then(
+                response => {
+                    if (response.success) {
+                        alert("Register successful! Please check your inbox to verify your account.")
+                        window.location.href = "/rr/login/";
+                    } else {
+                        this.errorMessage.show(response.error || 'Error creating user');
                     }
-                );
-            }).catch(err => {
-            console.error(err);
-            this.errorMessage.show("Error creating user");
-          });
-        })
+                }
+            );
+        });
     }
 
-    initInputFields(){
-        this.email.addEventListener('input', ()=>{
-            if(this.error_msg.textContent == "Email already exists")
-            this.errorMessage.remove();
+    initInputFields() {
+        this.email.addEventListener('input', () => {
+            if (this.error_msg.textContent == "Email already exists")
+                this.errorMessage.remove();
         })
-        
-        this.password.addEventListener('input', ()=>{
-            if(this.error_msg.textContent == "Passwords do not match")
-            this.errorMessage.remove();
+
+        this.password.addEventListener('input', () => {
+            if (this.error_msg.textContent == "Passwords do not match")
+                this.errorMessage.remove();
         })
-        this.c_password.addEventListener('input', ()=>{
-            if(this.error_msg.textContent == "Passwords do not match")
-            this.errorMessage.remove();
-        })
+        this.c_password.addEventListener('input', () => {
+            if (this.error_msg.textContent == "Passwords do not match")
+                this.errorMessage.remove();
+        });
     }
 }
