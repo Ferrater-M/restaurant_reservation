@@ -1,16 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     window.DataManager = new DataManager();        
     window.ErrorMessage = new ErrorMessage();
-
-    if (document.getElementById("btnSignin")) {
-        console.log("Login page detected");
-        window.Login = new Login();
-    }
-
-    if (document.getElementById("btnSignup")) {
-        console.log("Register page detected");
-        window.Register = new Register();
-    }
 });
 
 class ErrorMessage{

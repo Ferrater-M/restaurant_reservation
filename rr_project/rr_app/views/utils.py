@@ -1,7 +1,8 @@
 from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
-import re
+import re, random
+from ..models import VerificationCode
 
 def send_verification_email(pending_user, request):
     verification_url = request.build_absolute_uri(
@@ -24,21 +25,23 @@ def send_verification_email(pending_user, request):
         fail_silently=False,
     )
 
-def send_password_reset_email(user, request, reset_token):
-    reset_url = request.build_absolute_uri(
-        reverse('password_reset_confirm', kwargs={'token': reset_token})
-    )
-    
-    subject = 'Password Reset Request'
-    message = f'''
+def send_verification_code_email(user):
+    verification_code = f"{random.randint(0, 999999):06d}"
+    VerificationCode.objects.create(
+        user=user,
+        code=verification_code)
+
+    subject = "Your Verification Code"
+    message = f"""
     Hi {user.first_name},
-    
-    You requested a password reset. Click the link below to reset your password:
-    {reset_url}
-    
+
+    Your verification code is: {verification_code}
+
+    Enter this code to complete your verification. It will expire in 10 minutes.
+
     If you didn't request this, please ignore this email.
-    '''
-    
+    """
+
     send_mail(
         subject,
         message,
@@ -46,6 +49,9 @@ def send_password_reset_email(user, request, reset_token):
         [user.email],
         fail_silently=False,
     )
+
+    # Return the code so you can save it in the database or session for verification
+    return verification_code
 
 def validate_password(password):
     min_length = 8

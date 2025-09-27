@@ -1,3 +1,6 @@
+document.addEventListener('DOMContentLoaded', () => {
+    window.Register = new Register();
+});
 class Register {
     constructor() {
         this.submit = document.getElementById('btnSignup');
@@ -9,8 +12,8 @@ class Register {
         this.user = {}
         this.dataManager = window.DataManager;
         this.error_msg = document.getElementById('errorMsg');
-        this.errorMessage = window.ErrorMessage;
-        this.errorMessage.setElement(this.error_msg);
+        this.ErrorMessage = window.ErrorMessage;
+        this.ErrorMessage.setElement(this.error_msg);
         this.init();
     }
 
@@ -33,10 +36,10 @@ class Register {
             this.dataManager.postRequest('/rr/register_user/', this.user).then(
                 response => {
                     if (response.success) {
-                        alert("Register successful! Please check your inbox to verify your account.")
+                        alert(response.message)
                         window.location.href = "/rr/login/";
                     } else {
-                        this.errorMessage.show(response.error || 'Error creating user');
+                        this.ErrorMessage.show(response.error || 'Error creating user');
                     }
                 }
             );
@@ -46,16 +49,16 @@ class Register {
     initInputFields() {
         this.email.addEventListener('input', () => {
             if (this.error_msg.textContent == "Email already exists")
-                this.errorMessage.remove();
+                this.ErrorMessage.remove();
         })
 
         this.password.addEventListener('input', () => {
             if (this.error_msg.textContent == "Passwords do not match")
-                this.errorMessage.remove();
+                this.ErrorMessage.remove();
         })
         this.c_password.addEventListener('input', () => {
             if (this.error_msg.textContent == "Passwords do not match")
-                this.errorMessage.remove();
+                this.ErrorMessage.remove();
         });
     }
 }
