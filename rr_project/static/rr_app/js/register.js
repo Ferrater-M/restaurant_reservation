@@ -1,7 +1,3 @@
-document.addEventListener('DOMContentLoaded', () => {   
-    window.Register = new Register();
-});
-
 class Register {
     constructor(){
         this.submit = document.getElementById('btnSignup');
