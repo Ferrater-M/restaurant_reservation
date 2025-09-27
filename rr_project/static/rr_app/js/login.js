@@ -1,7 +1,3 @@
-document.addEventListener('DOMContentLoaded', () => {
-    window.Login = new Login();            
-});
-
 class Login {
     constructor() {
         this.submit = document.getElementById('btnSignin');
