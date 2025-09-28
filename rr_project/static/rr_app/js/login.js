@@ -50,14 +50,10 @@ class Login {
     }
 
     initInputFields() {
-        this.email.addEventListener('input', () => {
-            if (this.error_msg.textContent === "Email not found")
+        [this.email, this.password].forEach(field => {
+            field.addEventListener('input', () => {
                 this.ErrorMessage.remove();
-        });
-
-        this.password.addEventListener('input', () => {
-            if (this.error_msg.textContent === "Password is incorrect")
-                this.ErrorMessage.remove();
+            });
         });
     }
 }

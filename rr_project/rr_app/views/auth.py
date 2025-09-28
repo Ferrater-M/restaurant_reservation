@@ -84,20 +84,26 @@ def loginUser(request):
         data = json.loads(request.body)
         email = data.get("email")
         password = data.get("password")
-        if(not email or not password):
+
+        if not email or not password:
             return JsonResponse({"success": False, "error": "Please input all fields"}, status=400)
-        
+
         user = User.objects.filter(email=email).first()
         if user:
             if check_password(password, user.password):
-                return JsonResponse({"success": True, "message": "Login is successfull"})
+                return JsonResponse({"success": True, "message": "Login successful"})
             else:
-                return JsonResponse({"success": False, "error": "Email or password is incorrect"}, status=400)
-        else:
-            pending_user = PendingUser.objects.filter(email=email).first()
-            if pending_user and check_password(password, pending_user.password):
-                return JsonResponse({"success": False, "error": "Account is pending verification"}, status=400)
-            return JsonResponse({"success": False, "error": "Email or password is incorrect"}, status=400)
+                return JsonResponse({"success": False, "error": "Password is incorrect"}, status=400)
+
+        pending_user = PendingUser.objects.filter(email=email).first()
+        if pending_user:
+            if check_password(password, pending_user.password):
+                return JsonResponse({"success": False, "error": "Account pending verification"}, status=400)
+            else:
+                return JsonResponse({"success": False, "error": "Password is incorrect"}, status=400)
+
+        return JsonResponse({"success": False, "error": "Email does not exist"}, status=400)
+
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=400)
 

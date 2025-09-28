@@ -48,17 +48,17 @@ class Register {
 
     initInputFields() {
         this.email.addEventListener('input', () => {
-            if (this.error_msg.textContent == "Email already exists")
+            if (this.error_msg.textContent.includes("Email already exists")) {
                 this.ErrorMessage.remove();
-        })
+            }
+        });
 
-        this.password.addEventListener('input', () => {
-            if (this.error_msg.textContent == "Passwords do not match")
-                this.ErrorMessage.remove();
-        })
-        this.c_password.addEventListener('input', () => {
-            if (this.error_msg.textContent == "Passwords do not match")
-                this.ErrorMessage.remove();
+        [this.password, this.c_password].forEach(field => {
+            field.addEventListener('input', () => {
+                if (this.error_msg.textContent.includes("Passwords do not match")) {
+                    this.ErrorMessage.remove();
+                }
+            });
         });
     }
 }
