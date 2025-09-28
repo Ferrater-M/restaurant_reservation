@@ -10,12 +10,29 @@
   <input type="email" id="email" placeholder="Email address" required>
   <input type="password" id="password" placeholder="Password" required>
   <input type="password" id="cPassword" placeholder="Confirm password" required>
-  <input type="button" value="Submit" id="btnSignup">
+  <input type="button" value="Create Account" id="btnSignup">
+  
+  <!-- OAuth Buttons -->
+  <div class="oauth-buttons">
+    <div class="divider">
+      <span>or</span>
+    </div>
+    <button type="button" class="oauth-btn google-btn" id="btnGoogle">
+      <img src="{% static 'rr_app/images/google-icon.svg' %}" alt="Google">
+      Sign up with Google
+    </button>
+    <button type="button" class="oauth-btn microsoft-btn" id="btnMicrosoft">
+      <img src="{% static 'rr_app/images/microsoft-icon.svg' %}" alt="Microsoft">
+      Sign up with Microsoft
+    </button>
+  </div>
+  
   <p class="signin">Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
   <p class="error-msg" id="errorMsg"></p>
 </form>
 {% endblock %}
 
 {% block js %}
-<script src="{% static 'rr_app/js/Register.js' %}"></script>
+<script src="{% static 'rr_app/js/SupabaseAuth.js' %}"></script>
+<script src="{% static 'rr_app/js/register.js' %}"></script>
 {% endblock %}

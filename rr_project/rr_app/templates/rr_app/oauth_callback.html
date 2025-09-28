@@ -1,0 +1,15 @@
+{% extends 'rr_app/auth_base.html' %}
+{% load static %}
+{% block title %}Signing you in... - Restaurant Reservation{% endblock %}
+
+{% block content %}
+<div class="loading-container">
+  <div class="spinner"></div>
+  <p>Signing you in...</p>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'rr_app/js/SupabaseAuth.js' %}"></script>
+<script src="{% static 'rr_app/js/OAuthCallback.js' %}"></script>
+{% endblock %}
