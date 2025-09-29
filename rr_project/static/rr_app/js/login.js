@@ -72,3 +72,5 @@ class Login {
       this.error_msg.textContent = '';
     }
 }
+window.location.href = "/dashboard/";
+// Redirect to dashboard on successful login

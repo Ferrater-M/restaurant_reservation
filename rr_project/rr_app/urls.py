@@ -1,9 +1,10 @@
 from django.urls import path
-from .import views
+from . import views
 
 urlpatterns = [
-    path('login/', views.login, name='login'),  # Keep this if you want the old URL
-    path('register/', views.register, name ='register'),
-    path('getUsers/', views.getUsers, name ='getUsers'),
-    path('addUser/', views.addUser, name ='addUsers'),
+    path('', views.home, name='home'),   # ← handles /rr/
+    path('login/', views.login, name='login'),
+    path('register/', views.register, name='register'),
+    path('getUsers/', views.getUsers, name='getUsers'),
+    path('addUser/', views.addUser, name='addUsers'),
 ]

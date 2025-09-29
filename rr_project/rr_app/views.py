@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import User
 import json
+from django.http import HttpResponse
 
 
 def login(request):
@@ -37,3 +38,11 @@ def addUser(request):
 def getUsers(request):
     users = User.objects.all().values("id", "first_name", "last_name", "email", "password")
     return JsonResponse(list(users), safe=False)
+
+
+def home(request):
+    return render(request, 'rr_app/login.html')
+
+
+def dashboard_view(request):
+    return render(request, "rr_app/dashboard.html")
