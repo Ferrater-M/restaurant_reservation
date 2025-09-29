@@ -1,57 +1,13 @@
-from django.core.mail import send_mail
-from django.conf import settings
-from django.urls import reverse
-import re, random
-from ..models import VerificationCode
-
-def send_verification_email(pending_user, request):
-    verification_url = request.build_absolute_uri(
-        reverse('verify_email', kwargs={'token': str(pending_user.token)})
-    )
+import re
     
-    subject = 'Verify Your Email Address'
-    message = f'''
-    Hi {pending_user.first_name},
-
-    Please click the link below to verify your email:
-    {verification_url}
-    '''
-    
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        [pending_user.email],
-        fail_silently=False,
-    )
-
-def send_verification_code_email(user):
-    verification_code = f"{random.randint(0, 999999):06d}"
-    VerificationCode.objects.create(
-        user=user,
-        code=verification_code)
-
-    subject = "Your Verification Code"
-    message = f"""
-    Hi {user.first_name},
-
-    Your verification code is: {verification_code}
-
-    Enter this code to complete your verification. It will expire in 10 minutes.
-
-    If you didn't request this, please ignore this email.
-    """
-
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        [user.email],
-        fail_silently=False,
-    )
-
-    # Return the code so you can save it in the database or session for verification
-    return verification_code
+def get_client_ip(request):
+    """Get client IP address from request"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 def validate_password(password):
     min_length = 8

@@ -1,33 +1,81 @@
 class DataManager {
-    postRequest(url, data) {
-        // starting a network request with fetch()
-        // This method is a modern JS way to make HTTP requests (messagge a client sends to a server)
-        // Example: opening a url in your browser sends a GET request, submitting a form sends a POST request
-        // In this block of code, the method is POST so we are sending data to the server
-        // the fetch function may take 1 or 2 parameters, first parameter is the url you want to request
-        // the second parameter is an object where you can specify method, headers, body, and mode
-        // {method: 'data' headers: 'data' body: 'data'} is an example of a JS object literal, a shortcut for creating a class without defining a class
-        return fetch(url, {
-            method: 'POST', // methods include: get, post, put, patch, delete, head, options
-            headers: {
-                'Content-Type': 'application/json', // tells the server that we, the client is sending JSON data
-                'X-CSRFToken': this.getCSRFToken(), 
-                // includes Django's CSRF token so the POST request is allowed
-                // this.getCSRFToken(): a function that grabs the CSRF token from cookies (the method after this)
-            },
-            body: JSON.stringify(data) // converts our object (data) into a string that the server can understand
-
-        })
-        // .then() is a method that runs the function passed as the parameter once the server repleis
-        .then(response => response.json()); // response.json() just parses the server's response from JSON into a JS object, specifically an instance of a promise since fetch is asynch
+    constructor() {
+        this.auth = new SupabaseAuth();
     }
 
-    // To summarize, here's what happens in this method.
-    // The fetch function sends pqData to the server as JSON. Since we are using the url: 'add_pqs',
-    // that means our add_pq view will be called, because its corresponding url was requested. 
-    // Thus, the adding of the pq to the model is executed.
-    // The server returns a JSON response
-    
+    async postRequest(url, data, requireAuth = false) {
+        const headers = requireAuth ? this.auth.getAuthHeaders() : {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': this.getCSRFToken()
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(data)
+            });
+
+            if (response.status === 401 && requireAuth) {
+                // Try to refresh token
+                const refreshed = await this.auth.refreshAccessToken();
+                if (refreshed) {
+                    // Retry request with new token
+                    const retryHeaders = this.auth.getAuthHeaders();
+                    const retryResponse = await fetch(url, {
+                        method: 'POST',
+                        headers: retryHeaders,
+                        body: JSON.stringify(data)
+                    });
+                    return retryResponse.json();
+                } else {
+                    // Refresh failed, redirect to login
+                    this.auth.clearSession();
+                    window.location.href = '/rr/login/';
+                    return { success: false, error: 'Authentication required' };
+                }
+            }
+
+            return response.json();
+        } catch (error) {
+            console.error('Request error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async getRequest(url, requireAuth = false) {
+        const headers = requireAuth ? this.auth.getAuthHeaders() : {
+            'Content-Type': 'application/json'
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers
+            });
+
+            if (response.status === 401 && requireAuth) {
+                const refreshed = await this.auth.refreshAccessToken();
+                if (refreshed) {
+                    const retryResponse = await fetch(url, {
+                        method: 'GET',
+                        headers: this.auth.getAuthHeaders()
+                    });
+                    return retryResponse.json();
+                } else {
+                    this.auth.clearSession();
+                    window.location.href = '/rr/login/';
+                    return { success: false, error: 'Authentication required' };
+                }
+            }
+
+            return response.json();
+        } catch (error) {
+            console.error('Request error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
     getCSRFToken() {
         let cookieValue = null;
         const name = 'csrftoken';
@@ -42,23 +90,5 @@ class DataManager {
             }
         }
         return cookieValue;
-    }
-
-    getRequest(url) {
-        return fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Fetched Data:", data);
-            return data; // ✅ return the actual data
-        })
-        .catch(error => {
-            console.error('ManagerError:', error);
-            return [];
-        });
     }
 }
