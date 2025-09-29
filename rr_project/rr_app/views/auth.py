@@ -1,159 +1,270 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from .utils import send_verification_email, validate_password, send_verification_code_email
-from ..models import User, PendingUser, VerificationCode
-from django.contrib.auth.hashers import make_password, check_password
+from ..models import User
+from .utils import  validate_password
+from supabase import create_client
+from django.conf import settings
+from functools import wraps
 import json
-
-
-def loginRender(request):
+def login_render(request):
     return render(request, 'rr_app/login.html')
 
-def registerRender(request):
+def register_render(request):
     return render(request, 'rr_app/register.html')
 
-def forgot_passRender(request):
+def forgot_pass_render(request):
     return render(request, 'rr_app/fpass.html')
 
-@csrf_exempt 
-@require_http_methods(["POST"])
-def registerUser(request):
-    try:
-        data = json.loads(request.body)
-        first_name=data.get("first_name")
-        last_name=data.get("last_name")
-        password=data.get("password")
-        c_password=data.get("c_password")
-        
-        if(not first_name or not last_name or not password or not c_password):
-            return JsonResponse({"success": False, "error": "Please input all fields"}, status=400)
-
-        email = data.get("email")
-        if User.objects.filter(email=email).exists() or PendingUser.objects.filter(email=email).exists():
-            return JsonResponse({"success": False, "error": "Email already exists"}, status=400)
-
-        valid, message = validate_password(password)
-        if(not valid):
-            return JsonResponse({"success": False, "error": message}, status=400)
-        
-        if(password != c_password):
-            return JsonResponse({"success": False, "error": "Passwords do not match"}, status=400)
+def reset_password_render(request):
+    return render(request, 'rr_app/reset_password.html')
 
 
-        hashed_password = make_password(password)
+def get_supabase_client():
+    return create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY)
 
-        pending = PendingUser.objects.create(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            password=hashed_password,
-        )
-
-        send_verification_email(pending, request)
-        print("2") 
-        return JsonResponse({
-            "success": True,
-            "message": "Register successful! Please check your inbox to verify your account."
-        })
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=400)
-
-
-
-def verify_email(request, token):
-    pending = get_object_or_404(PendingUser, token=token)
-
-    # Create real User
-    user = User.objects.create(
-        first_name=pending.first_name,
-        last_name=pending.last_name,
-        email=pending.email,
-        password=pending.password
-    )
-    pending.delete()  # cleanup
-
-    # Auto-login or redirect
-    return redirect('/rr/login/')
 
 @csrf_exempt 
 @require_http_methods(["POST"])
-def loginUser(request):
+def register_user(request):
     try:
         data = json.loads(request.body)
         email = data.get("email")
         password = data.get("password")
-
-        if not email or not password:
+        first_name = data.get("first_name")
+        last_name = data.get("last_name")
+        
+        if not all([email, password, first_name, last_name]):
             return JsonResponse({"success": False, "error": "Please input all fields"}, status=400)
 
-        user = User.objects.filter(email=email).first()
+        supabase = get_supabase_client()
+        
+        # Register with Supabase
+        auth_response = supabase.auth.sign_up({
+            "email": email,
+            "password": password,
+            "options": {
+                "data": {
+                    "first_name": first_name,
+                    "last_name": last_name
+                }
+            }
+        })
+        user = auth_response.user
+
+        django_user = User.objects.create(
+            supabase_id=user.id,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            is_active=True
+        )
+        django_user.update_last_login()
+
+        
         if user:
-            if check_password(password, user.password):
-                return JsonResponse({"success": True, "message": "Login successful"})
-            else:
-                return JsonResponse({"success": False, "error": "Password is incorrect"}, status=400)
-
-        pending_user = PendingUser.objects.filter(email=email).first()
-        if pending_user:
-            if check_password(password, pending_user.password):
-                return JsonResponse({"success": False, "error": "Account pending verification"}, status=400)
-            else:
-                return JsonResponse({"success": False, "error": "Password is incorrect"}, status=400)
-
-        return JsonResponse({"success": False, "error": "Email does not exist"}, status=400)
-
+            return JsonResponse({
+                "success": True,
+                "message": "Registration successful! Please check your email to verify your account.",
+                "user": {
+                    "id": auth_response.user.id,
+                    "email": auth_response.user.email
+                }
+            })
+        else:
+            return JsonResponse({"success": False, "error": "Registration failed"}, status=400)
+            
     except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=400)
+        error_message = str(e)
+        if "User already registered" in error_message:
+            return JsonResponse({"success": False, "error": "Email already exists"}, status=400)
+        return JsonResponse({"success": False, "error": error_message}, status=400)
+
 
 @csrf_exempt 
 @require_http_methods(["POST"])
-def fpassRequest(request):
+def login_user(request):
     try:
         data = json.loads(request.body)
-        req = data.get("request")
         email = data.get("email")
-        user = User.objects.filter(email=email).first()
-        if req == "email_verif":
-            if not email:
-                return JsonResponse({"success": False, "error": "Please input email"}, status=400)
-            if not user:
-                return JsonResponse({"success": False, "error": "Email does not exist"}, status=400)
-            send_verification_code_email(user)
-            return JsonResponse({"success": True, "message": "Verification Code Sent"})
-        if req == "code_verif":
-            code = data.get("code")
-            if not code:
-                return JsonResponse({"success": False, "error": "Please input the code"}, status=400)
-            code_obj = VerificationCode.objects.filter(
-                user=user,
-                code=code,
-            ).first()   
-            if not code_obj:
-                return JsonResponse({"success": False, "error": "Verification code is incorrect or expired"}, status=400)
-            
-            if code_obj.is_expired():
-                return JsonResponse({"success": False, "error": "Verification code has expired"}, status=400)
-            code_obj.delete()
-            return JsonResponse({"success": True, "message": "Verification is successful"})
-        if req == "password_verif":
-            password = data.get("password")
-            c_password = data.get("c_password")
-            if not password or not c_password:
-                return JsonResponse({"success": False, "error": "Please input all fields"}, status=400)
-            valid, message = validate_password(password)
-            if(not valid):
-               return JsonResponse({"success": False, "error": message}, status=400)
-            if password != c_password:
-                return JsonResponse({"success": False, "error": "Passwords do not match"}, status=400)
-            hashed_password = make_password(password)
-            user.password = hashed_password
-            user.save()
-            return JsonResponse({"success": True, "message": "Password has changed"})
+        password = data.get("password")
+        
+        if not email or not password:
+            return JsonResponse({"success": False, "error": "Please input all fields"}, status=400)
+        
+        supabase = get_supabase_client()
+        
+        # Sign in with Supabase
+        auth_response = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": password
+        })
+        
+        if auth_response.user and auth_response.session:
+            access_token = auth_response.session.access_token
+            # Sync user with Django model
+            user = supabase.auth.get_user(access_token).user
+            django_user = User.objects.filter(supabase_id=user.id).first()
+            django_user.update_last_login()
+            return JsonResponse({
+                "success": True,
+                "message": "Login successful",
+                "session": {
+                    "access_token": access_token,
+                    "refresh_token": auth_response.session.refresh_token,
+                    "expires_at": auth_response.session.expires_at
+                },
+                "user": {
+                    "id": django_user.id,
+                    "supabase_id": django_user.supabase_id,
+                    "email": django_user.email,
+                    "first_name": django_user.first_name,
+                    "last_name": django_user.last_name,
+                    "role": django_user.role,
+                    "is_admin": django_user.is_admin()
+                }
+            })
+        else:
+            return JsonResponse({"success": False, "error": "Invalid credentials"}, status=400)
+    except Exception as e:
+        error_message = str(e)
+        if "Invalid login credentials" in error_message:
+            return JsonResponse({"success": False, "error": "Email or password is incorrect"}, status=400)
+        elif "Email not confirmed" in error_message:
+            return JsonResponse({"success": False, "error": "Please verify your email first"}, status=400)
+        return JsonResponse({"success": False, "error": error_message}, status=400)
+
+@csrf_exempt 
+@require_http_methods(["POST"])
+def fpass_request(request):
+    try:
+        data = json.loads(request.body)
+        email = data.get("email")
+        
+        if not email:
+            return JsonResponse({"success": False, "error": "Please input email"}, status=400)
+        
+        supabase = get_supabase_client()
+        
+        # Send password reset email
+        supabase.auth.reset_password_email(
+            email,
+            {
+                "redirect_to": f"{request.build_absolute_uri('/')[:-1]}/rr/reset-password/"
+            }
+        )
+        
+        return JsonResponse({
+            "success": True,
+            "message": "Password reset email sent. Please check your inbox."
+        })
+        
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=400)
 
 def confirmPass(request):
     return JsonResponse
     
+@csrf_exempt 
+@require_http_methods(["POST"])
+def reset_password_request(request):
+    try:
+        data = json.loads(request.body)
+        access_token = data.get("access_token")
+        password = data.get("password")
+        c_password = data.get("c_password")
+
+        if not access_token or not password or not c_password:
+            return JsonResponse({"success": False, "error": "Missing required fields"}, status=400)
+        
+        valid, message = not validate_password(password) or not validate_password(c_password)
+        if not valid:
+            return JsonResponse({"success": False, "error": message}, status=400)
+        
+
+        supabase = get_supabase_client()
+        
+        # Update password
+        supabase.auth.update_user({
+            "password": password
+        }, access_token)
+        
+        return JsonResponse({
+            "success": True,
+            "message": "Password updated successfully"
+        })
+        
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+@csrf_exempt 
+@require_http_methods(["POST"])
+def refresh_token(request):
+    try:
+        data = json.loads(request.body)
+        refresh_token = data.get("refresh_token")
+        
+        if not refresh_token:
+            return JsonResponse({"success": False, "error": "Refresh token required"}, status=400)
+        
+        supabase = get_supabase_client()
+        
+        auth_response = supabase.auth.refresh_session(refresh_token)
+        
+        if auth_response.session:
+            return JsonResponse({
+                "success": True,
+                "session": {
+                    "access_token": auth_response.session.access_token,
+                    "refresh_token": auth_response.session.refresh_token,
+                    "expires_at": auth_response.session.expires_at
+                }
+            })
+        else:
+            return JsonResponse({"success": False, "error": "Failed to refresh token"}, status=400)
+            
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400)
+    
+def supabase_auth_required(view_func):
+    """Decorator to require Supabase authentication"""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return JsonResponse({"success": False, "error": "Authentication required"}, status=401)
+        
+        token = auth_header.split('Bearer ')[1]
+        supabase = get_supabase_client()
+        
+        try:
+            # Verify the token with Supabase
+            user = supabase.auth.get_user(token).user
+            if user:
+                # Sync user with local Django model
+                django_user = User.objects.filter(supabase_id=user.id).first()
+                request.user = django_user
+                request.supabase_user = user
+                return view_func(request, *args, **kwargs)
+        except Exception as e:
+            pass
+        
+        return JsonResponse({"success": False, "error": "Invalid token"}, status=401)
+    
+    return wrapper
+
+@supabase_auth_required  
+def get_current_user(request):
+    return JsonResponse({
+        "success": True,
+        "user": {
+            "id": request.user.id,
+            "supabase_id": request.user.supabase_id,
+            "email": request.user.email,
+            "first_name": request.user.first_name,
+            "last_name": request.user.last_name,
+            "role": request.user.role,
+            "is_admin": request.user.is_admin(),
+        }
+    })

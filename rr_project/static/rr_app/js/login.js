@@ -1,59 +1,39 @@
 document.addEventListener('DOMContentLoaded', () => {
-    window.Login = new Login();
-});
+    const submit = document.getElementById('btnSubmit');
+    const i_email = document.getElementById('email');
+    const i_password = document.getElementById('password');
+    const errorMsg = document.getElementById('errorMsg');
+    const forgotPass = document.getElementById('forgotPassword');
+    const ErrorMessage = window.ErrorMessage;
+    const dataManager = window.DataManager;
+    ErrorMessage.setElement(errorMsg);
 
-class Login {
-    constructor() {
-        this.submit = document.getElementById('btnSignin');
-        this.email = document.getElementById('email');
-        this.password = document.getElementById('password');
-        this.error_msg = document.getElementById('errorMsg');
-        this.forgot_pass = document.getElementById('forgotPassword');
-        this.dataManager = window.DataManager;
-        this.ErrorMessage = window.ErrorMessage;
-        this.ErrorMessage.setElement(this.error_msg);
-        this.init();
-    }
+    submit.addEventListener('click', async () => {
+        const em_pass = {
+            email: i_email.value.trim(),
+            password: i_password.value.trim()
+        };
 
-    init() {
-        this.initBtnSubmitListener();
-        this.initInputFields();
-        this.initLblForgotPassword();
-    }
-
-    async initBtnSubmitListener() {
-        console.log("click");
-        this.submit.addEventListener('click', async () => {
-            const email = this.email.value.trim();
-            const password = this.password.value.trim();
-
-            const em_pass = { email: email, password: password }
-
-            try {
-                this.dataManager.postRequest('/rr/login_user/', em_pass).then(response => {
-                    if (response.success) {
-                        alert(response.message);
-                    } else {
-                        this.ErrorMessage.show(response.error || "Error login");
-                    }
-                })
-            } catch (err) {
-                console.error(err);
+        try {
+            const response = await window.DataManager.postRequest('/rr/login_user/', em_pass);
+            if (response.success) {
+                dataManager.auth.setSession(response.session, response.user);
+                alert(response.message);
+            } else {
+                ErrorMessage.show(response.error || "Error logging in");
             }
-        })
-    }
+        } catch (err) {
+            ErrorMessage.show(err);
+        }
+    });
 
-    initLblForgotPassword() {
-        this.forgot_pass.addEventListener('click', ()=>{
-            window.location.href = "/rr/forgot_password/";
-        });
-    }
+    forgotPass.addEventListener('click', () => {
+        window.location.href = "/rr/forgot_password/";
+    });
 
-    initInputFields() {
-        [this.email, this.password].forEach(field => {
-            field.addEventListener('input', () => {
-                this.ErrorMessage.remove();
-            });
+    [i_email, i_password].forEach(field => {
+        field.addEventListener('input', () => {
+            ErrorMessage.remove();
         });
-    }
-}
+    });
+});
